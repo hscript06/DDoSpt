@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo cp DDoS.sh /usr/local/bin/DDoS
-sudo chmod +x /usr/local/bin/DDoS
+sudo cp DDoS.sh /usr/local/bin/DDoSpt
+sudo chmod +x /usr/local/bin/DDoSpt
 
-echo "DDoS Instalado. Usa el comando: DDoS para iniciar"
+echo "DDoSpt Instalado. Usa el comando: DDoSpt para iniciar"
