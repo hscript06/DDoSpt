@@ -1,5 +1,5 @@
 #!/bin/bash
 
-sudo rm -rf /usr/local/bin/DDoS
+sudo rm -rf /usr/local/bin/DDoSpt
 
-echo "DDoS desinstalado correctamente."
+echo "DDoSpt desinstalado correctamente."
